@@ -3,10 +3,7 @@ package com.example.javafxdemo;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
@@ -40,7 +37,6 @@ public class HttpStatusApp extends Application {
         // Service setup
         httpService = new HttpServiceWithRetry();
         setupServiceHandlers();
-
         sendButton.setOnAction(e -> sendRequest());
 
         Scene scene = new Scene(root, 400, 400);
@@ -58,8 +54,19 @@ public class HttpStatusApp extends Application {
 
         httpService.setOnFailed(e -> {
             Throwable ex = httpService.getException();
-            logArea.appendText("Failed: " + ex.getMessage() + "\n");
+            logArea.appendText("Failed: " + ex.getMessage() + "\n" + ex.getCause() + "\n");
             sendButton.setDisable(false);
+
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Retry Connection");
+            alert.setHeaderText("Maximum retries exceeded. Cause: " + ex.getCause());
+            alert.setContentText("Would you like to try again?");
+
+            alert.showAndWait().ifPresent(response -> {
+                if (response == ButtonType.OK) {
+                    sendRequest();
+                }
+            });
         });
 
         httpService.messageProperty().addListener((obs, old, newMsg) -> {
@@ -68,7 +75,6 @@ public class HttpStatusApp extends Application {
             }
         });
     }
-
     private void sendRequest() {
         sendButton.setDisable(true);
         logArea.clear();
