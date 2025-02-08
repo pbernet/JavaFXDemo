@@ -7,12 +7,13 @@ import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+import java.net.http.HttpResponse;
 
 public class HttpStatusApp extends Application {
     private TextArea logArea;
     private TextField statusField;
     private Button sendButton;
-    private HttpServiceWithRetry httpService;
+    private HttpServiceWithRetry<String> httpService;  // Add type parameter
 
     @Override
     public void start(Stage stage) {
@@ -34,8 +35,8 @@ public class HttpStatusApp extends Application {
                 logArea
         );
 
-        // Service setup
-        httpService = new HttpServiceWithRetry();
+        // Updated service initialization with BodyHandler
+        httpService = new HttpServiceWithRetry<>(HttpResponse.BodyHandlers.ofString());
         setupServiceHandlers();
         sendButton.setOnAction(e -> sendRequest());
 
