@@ -1,9 +1,10 @@
-package com.example.javafxdemo;
+package com.example.javafxdemo.service;
 
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -34,31 +35,30 @@ public class HttpServiceWithRetry<T> extends Service<T> {
                         .connectTimeout(Duration.ofSeconds(5))
                         .build();
 
-                while (true) {
+                for (retryCount = 0; retryCount <= MAX_RETRIES; retryCount++) {
                     try {
                         HttpRequest request = HttpRequest.newBuilder()
                                 .uri(URI.create(url))
                                 .GET()
                                 .build();
 
-                        HttpResponse<T> response =
-                                client.send(request, bodyHandler);
+                        HttpResponse<T> response = client.send(request, bodyHandler);
 
-                        if (response.statusCode() >= 500) {
+                        if (response.statusCode() >= HttpURLConnection.HTTP_INTERNAL_ERROR) {
                             throw new IOException("Server error: " + response.statusCode());
                         }
 
                         return response.body();
 
                     } catch (Exception e) {
-                        retryCount++;
-                        if (retryCount >= MAX_RETRIES) {
-                            throw new RuntimeException("Failed after " + MAX_RETRIES + " attempts", e);
+                        if (retryCount == MAX_RETRIES) {
+                            throw new RuntimeException("Failed after: " + MAX_RETRIES + " attempts", e);
                         }
-                        updateMessage("Retry attempt " + retryCount + " of " + MAX_RETRIES);
+                        updateMessage("Retry attempt: " + (retryCount + 1) + " of: " + MAX_RETRIES);
                         Thread.sleep(RETRY_DELAY.toMillis());
                     }
                 }
+                throw new RuntimeException("Unexpected end of retry loop");
             }
         };
     }
