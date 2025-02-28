@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.Circle?>
+<VBox spacing="10" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.example.javafxdemo.ScheduledHttpDemoController">
+    <padding>
+        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
+    </padding>
+
+    <GridPane hgap="10" vgap="10">
+        <columnConstraints>
+            <ColumnConstraints hgrow="NEVER" minWidth="100"/>
+            <ColumnConstraints hgrow="ALWAYS" minWidth="200"/>
+        </columnConstraints>
+
+        <Label text="URL:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+        <TextField fx:id="urlField" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+
+        <Label text="Interval (sec):" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+        <TextField fx:id="intervalField" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+
+        <Button fx:id="startStopButton" text="Start" onAction="#onStartStopClicked"
+                GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+    </GridPane>
+
+    <Separator/>
+
+    <TitledPane text="Service Status">
+        <VBox spacing="5">
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <Label text="Status:"/>
+                <Label fx:id="statusLabel" text="Idle" style="-fx-font-weight: bold;"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Circle fx:id="statusIndicator" radius="8" fill="gray"/>
+            </HBox>
+
+            <Label text="Last Execution:"/>
+            <Label fx:id="lastExecutionTimeLabel" style="-fx-font-style: italic;"/>
+
+            <Label text="Response Data:"/>
+            <ScrollPane fitToWidth="true" prefHeight="50">
+                <TextArea fx:id="resultTextArea" editable="false" wrapText="true"/>
+            </ScrollPane>
+        </VBox>
+    </TitledPane>
+
+    <TitledPane text="History" expanded="false">
+        <ListView fx:id="historyListView" prefHeight="150"/>
+    </TitledPane>
+</VBox>

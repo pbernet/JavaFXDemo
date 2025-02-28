@@ -31,31 +31,32 @@ public class HttpServiceWithRetry<T> extends Service<T> {
         return new Task<T>() {
             @Override
             protected T call() throws Exception {
-                HttpClient client = HttpClient.newBuilder()
+                try (HttpClient client = HttpClient.newBuilder()
                         .connectTimeout(Duration.ofSeconds(5))
-                        .build();
+                        .build()) {
 
-                for (retryCount = 0; retryCount <= MAX_RETRIES; retryCount++) {
-                    try {
-                        HttpRequest request = HttpRequest.newBuilder()
-                                .uri(URI.create(url))
-                                .GET()
-                                .build();
+                    for (retryCount = 0; retryCount <= MAX_RETRIES; retryCount++) {
+                        try {
+                            HttpRequest request = HttpRequest.newBuilder()
+                                    .uri(URI.create(url))
+                                    .GET()
+                                    .build();
 
-                        HttpResponse<T> response = client.send(request, bodyHandler);
+                            HttpResponse<T> response = client.send(request, bodyHandler);
 
-                        if (response.statusCode() >= HttpURLConnection.HTTP_INTERNAL_ERROR) {
-                            throw new IOException("Server error: " + response.statusCode());
+                            if (response.statusCode() >= HttpURLConnection.HTTP_INTERNAL_ERROR) {
+                                throw new IOException("Server error: " + response.statusCode());
+                            }
+
+                            return response.body();
+
+                        } catch (Exception e) {
+                            if (retryCount == MAX_RETRIES) {
+                                throw new RuntimeException("Failed after: " + MAX_RETRIES + " attempts", e);
+                            }
+                            updateMessage("Retry attempt: " + (retryCount + 1) + "/" + MAX_RETRIES);
+                            Thread.sleep(RETRY_DELAY.toMillis());
                         }
-
-                        return response.body();
-
-                    } catch (Exception e) {
-                        if (retryCount == MAX_RETRIES) {
-                            throw new RuntimeException("Failed after: " + MAX_RETRIES + " attempts", e);
-                        }
-                        updateMessage("Retry attempt: " + (retryCount + 1) + " of: " + MAX_RETRIES);
-                        Thread.sleep(RETRY_DELAY.toMillis());
                     }
                 }
                 throw new RuntimeException("Unexpected end of retry loop");
